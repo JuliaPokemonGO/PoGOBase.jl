@@ -1,0 +1,9 @@
+Manifest.toml
+deps/gamemaster.json
+deps/gamemaster.ser
+deps/rankings-*.json
+deps/rankings.ser
+deps/meta-*.json
+deps/meta.ser
+deps/build.log
+repl_history.jl
