@@ -36,8 +36,10 @@ struct Pokemon
     end
 end
 Pokemon(;
-    pd, name = display_name(pd), level, ivs, islucky = false, mutation = 'N', max = 'N', isshiny = false,
-    weight = NaN32, height = NaN32, mega = false, maxlevel = nothing, raid_tier = nothing, max_tier = nothing, kwargs...
+    pd, name = display_name(pd), level, ivs, islucky = false, mutation = 'N', isshiny = false,
+    weight = NaN32, height = NaN32, mega = false, maxlevel = nothing, raid_tier = nothing, max_tier = nothing,
+    max = max_tier === nothing ? 'N' : (max_tier == 6 ? 'G' : 'D'),
+    kwargs...
 ) =
     Pokemon(pd, name, level, ivs, islucky, mutation, max, isshiny, weight, height, mega, maxlevel, raid_tier, max_tier; kwargs...)
 
@@ -85,6 +87,7 @@ Pokemon(id::Union{AbstractString, Species}; kwargs...) = Pokemon(; level = nothi
 # end
 
 function Base.show(io::IO, poke::Pokemon)
+    poke.max == 'G' && print(io, "G-")
     (; name, pd) = poke
     key = display_name(pd)
     showname(io, poke, name)
@@ -152,7 +155,7 @@ end
 ## Types for simplified battle mechanics
 
 struct BossFT
-    pd::Species                    # used only for its typing and move availibility (not stats)
+    pd::Species                        # used only for its typing and move availibility (not stats)
     ferocity::Float32                  # like attack, but with all multipliers included
     tankiness::Float32                 # defensive parameter for a world in which the boss HP starts at 100%
 end

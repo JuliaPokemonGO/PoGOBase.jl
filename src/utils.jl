@@ -57,6 +57,8 @@ end
 
 # JLD2 serialization
 
+# This is primarily to avoid writing the entire `Species` object repeatedly
+
 struct PokemonSerialization
     key::String
     name::String                     # assigned name

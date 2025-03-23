@@ -55,6 +55,12 @@ striptype(::Nothing) = nothing
 duration(::Nothing) = 0.0
 uniquename(::Nothing) = "nothing"
 
+@doc """
+    uniquename(obj) → name
+
+Return a unique name for the object `obj`. Examples of `obj` include `Species`, `Pokemon`, moves, etc.
+""" uniquename
+
 abstract type AbstractMove end
 
 struct Buffs
@@ -137,6 +143,8 @@ ispvp(::PvPMove) = true
 duration(move::PvPMove) = (move.durationTurns + 1) * 0.5   # they seem to store turns-1
 power(move::AbstractMove) = move.power
 
+Base.show(io::IO, move::PvPMove) = print(io, uniquename(move), " (", move.type, "): ", move.power, " power, ", duration(move), " s, ", move.energyDelta, " energy, ", move.buffs)
+
 struct PvEMove <: AbstractMove
     movementId::String
     pokemonType::String
@@ -159,6 +167,8 @@ type(move::PvEMove) = move.pokemonType
 ispvp(::PvEMove) = false
 duration(move::PvEMove) = move.durationMs / 1000
 power(move::PvEMove) = (p = move.power; isnan(p) ? zero(p) : p)
+
+Base.show(io::IO, move::PvEMove) = print(io, uniquename(move), " (", move.pokemonType, "): ", power(move), " power, ", duration(move), " s, ", move.energyDelta, " energy")
 
 struct PowerUps
     upgradesPerLevel::Int

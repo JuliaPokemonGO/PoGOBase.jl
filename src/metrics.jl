@@ -52,12 +52,13 @@ Compute the `level`, `cp`, and ["stat product"](https://gostadium.club/rank-chec
 """
 function statproduct_league(pd::Species, ivs, league_cp::Int; kwargs...)
     lvl, cp = league_max_level(pd, ivs, 1.0, league_cp; kwargs...)
-    return lvl => (cp, stat_product(stats(pd, ivs, lvl)))
+    return lvl => (cp, statproduct(stats(pd, ivs, lvl)))
 end
 function statproduct_league(name::AbstractString, ivs, league_cp::Int; kwargs...)
     kwmatch, kwlml = split_kwargs(onlymatch_kwargs; kwargs...)
     return statproduct_league(only_pokemon(name; kwmatch...), ivs, league_cp; kwlml...)
 end
+statproduct_league(poke::Pokemon, league_cp::Int; kwargs...) = statproduct_league(Species(poke), poke.ivs, league_cp; kwargs...)
 
 """
     statproducts_league(pd, league_cp; level_limit=50.0, iv_floor=0) → statprods
@@ -82,8 +83,8 @@ all three categories. The following floors apply:
 """
 function statproducts_league(pd::Union{Species, MegaOverride}, league_cp::Int; iv_floor = 0, mega = false, kwargs...)
     bs = base_stats(pd; mega)
-    z = zero(stat_product(bs))
-    return OffsetArray([any(<(iv_floor), (i, j, k)) ? z : stat_product(bs .+ (i, j, k), league_max_level(pd, (i, j, k), 1.0, league_cp; kwargs...).first) for i in 0:15, j in 0:15, k in 0:15], -1, -1, -1)
+    z = zero(statproduct(bs))
+    return OffsetArray([any(<(iv_floor), (i, j, k)) ? z : statproduct(bs .+ (i, j, k), league_max_level(pd, (i, j, k), 1.0, league_cp; kwargs...).first) for i in 0:15, j in 0:15, k in 0:15], -1, -1, -1)
 end
 function statproducts_league(name::AbstractString, league_cp::Int; kwargs...)
     kwmatch, kwlml = split_kwargs(onlymatch_kwargs; kwargs...)
@@ -174,26 +175,3 @@ raid_power(pd::Species, ivs::IVsType, level::Union{Real, Nothing}; isshadow = fa
 raid_power(poke::Pokemon; as::Species = Species(poke), level = scalarlevel(poke), kwargs...) =
     raid_power(as, poke.ivs, level; isshadow = isshadow_default(poke), kwargs...)
 raid_power(a::Real, d::Real, h::Real) = sqrt(cbrt(a^4 * d * h))
-
-"""
-    move_quality(move::PvPMove)
-
-Return a score for a move, where higher is better. This is a combination of the energy generation or consumption,
-damage, and duration (for fast moves) or buffs/debuffs (for charged moves).
-A quality score of 0 is "typical," and higher scores are better.
-"""
-function move_quality(move::PvPMove)
-    if move.energyDelta >= 0
-        # fast move
-        t = move.durationTurns + 1
-        eps = move.energyDelta / t
-        dps = move.power / t
-        # return (Float64(dps) + eps - t/6 - 35/6) / dps
-        return (6 * Float64(move.power) + 6 * move.energyDelta - t^2 - 35 * t) / (6 * move.power)  # same as above but numerically more accurate
-        # return 0.18f0 * eps + 0.14f0 * dps - 0.006f0*t^2 - 1
-    end
-    # charged move
-    e, d, b = move.energyDelta, move.power, buffscore(move)
-    return d > 0 ? (d + 2 * e + 15 * b + 20) / d : -Inf
-end
-move_quality(name::AbstractString) = move_quality(PoGOBase.pvp_moves[name])

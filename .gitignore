@@ -6,4 +6,5 @@ deps/rankings.ser
 deps/meta-*.json
 deps/meta.ser
 deps/build.log
+docs/build
 repl_history.jl

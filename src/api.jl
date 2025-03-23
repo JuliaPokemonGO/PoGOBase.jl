@@ -1,6 +1,35 @@
 ## Match pokemon by name
 
 const match_kwargs = (:tol, :complete)
+
+"""
+    matching_pokemon(name::AbstractString; tol=0.0, complete=false) → species
+
+Return a list of `Species` objects that match the given name. If `complete` is `true`, the name must match exactly.
+
+`tol` represents a tolerance on the Levenshtein distance between the name and the species name.
+
+# Examples
+
+```jldoctest
+julia> matching_pokemon("rattata")
+2-element Vector{Species}:
+ RATTATA (NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["DIG", "HYPER_FANG", "BODY_SLAM"]
+ RATTATA_ALOLA (DARK/NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["CRUNCH", "HYPER_FANG", "SHADOW_BALL"]
+
+julia> matching_pokemon("rattata"; complete=true)
+1-element Vector{Species}:
+ RATTATA (NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["DIG", "HYPER_FANG", "BODY_SLAM"]
+
+julia> matching_pokemon("rattatta")      # misspelled
+Species[]
+
+julia> matching_pokemon("rattatta"; tol=0.25)
+2-element Vector{Species}:
+ RATTATA (NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["DIG", "HYPER_FANG", "BODY_SLAM"]
+ RATTATA_ALOLA (DARK/NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["CRUNCH", "HYPER_FANG", "SHADOW_BALL"]
+```
+"""
 function matching_pokemon(name::AbstractString; tol = 0.0, complete::Bool = false)
     nameu = uppercase(name)
     matches = Species[]
@@ -21,15 +50,27 @@ function matching_pokemon(name::AbstractString; tol = 0.0, complete::Bool = fals
     return denormal(matches, keys)
 end
 
-# Match, resolving ambiguities with types
+"""
+    matching_pokemon(name::AbstractString, types::AbstractString; kwargs...) → species
+
+Return a list of `Species` objects that match the given name and types.
+
+# Examples
+
+```jldoctest
+julia> matching_pokemon("rattata", "dark/normal")
+1-element Vector{Species}:
+ RATTATA_ALOLA (DARK/NORMAL): (103, 70, 102); Fast: ["TACKLE_FAST", "QUICK_ATTACK_FAST"]; Charged: ["CRUNCH", "HYPER_FANG", "SHADOW_BALL"]
+```
+"""
 function matching_pokemon(name::AbstractString, types::AbstractString; kwargs...)
     matches = matching_pokemon(name; kwargs...)
     length(matches) < 2 && return matches
     types = split(types, '/')
     filter!(matches) do match
-        match.type == types[1] || return false
+        match.type == uppercase(types[1]) || return false
         if length(types) > 1
-            match.type2 == types[2] || return false
+            match.type2 == uppercase(types[2]) || return false
         else
             match.type2 === nothing || return false
         end
@@ -53,6 +94,24 @@ function _only_pokemon(name::AbstractString, matches; exact::Bool = false, equiv
     end
     return only(matches)
 end
+
+"""
+    only_pokemon(name::AbstractString; exact=false, equiv=false, kwargs...) → species
+
+Return the `Species` object that matches the given name, and throw an error if more than one matches.
+
+If `exact` is `true`, only exact matches of the name are considered.
+If `equiv` is `true`, an error is not thrown if all matches are equivalent in their types, base stats, and moves.
+
+# Examples
+
+```jldoctest
+julia> only_pokemon("scatterbug")
+ERROR: multiple matching pokemon were found: ["SCATTERBUG", "SCATTERBUG_ARCHIPELAGO", "SCATTERBUG_CONTINENTAL", "SCATTERBUG_ELEGANT", "SCATTERBUG_FANCY", "SCATTERBUG_GARDEN", "SCATTERBUG_HIGH_PLAINS", "SCATTERBUG_ICY_SNOW", "SCATTERBUG_JUNGLE", "SCATTERBUG_MARINE", "SCATTERBUG_MEADOW", "SCATTERBUG_MODERN", "SCATTERBUG_MONSOON", "SCATTERBUG_OCEAN", "SCATTERBUG_POKEBALL", "SCATTERBUG_POLAR", "SCATTERBUG_RIVER", "SCATTERBUG_SANDSTORM", "SCATTERBUG_SAVANNA", "SCATTERBUG_SUN", "SCATTERBUG_TUNDRA"]
+
+julia> only_pokemon("scatterbug"; equiv=true)
+SCATTERBUG (BUG): (63, 63, 116); Fast: ["BUG_BITE_FAST", "TACKLE_FAST"]; Charged: ["STRUGGLE"]
+"""
 function only_pokemon(name::AbstractString; exact::Bool = false, equiv::Bool = false, kwargs...)
     matches = matching_pokemon(name; kwargs...)
     return _only_pokemon(name, matches; exact, equiv)
@@ -134,8 +193,19 @@ isshadow(poke::Pokemon) = poke.mutation == 'S'
 ispurified(poke::Pokemon) = poke.mutation == 'P'
 isshiny(poke::Pokemon) = poke.isshiny
 
+"""
+    megaevolve(poke::Pokemon, mega::Union{Bool, Char} = true) → megapoke
+
+Create a new `Pokemon` object that is a mega-evolution of `poke`. If `mega` is `true`, the default mega-evolution
+is used. If `mega` is a `Char`, the mega-evolution with that name is used. If `mega` is `false`, the normal form is returned.
+"""
 megaevolve(poke::Pokemon, mega::Union{Bool, Char} = true) = Pokemon(; ntfromstruct(poke)..., mega)
 
+"""
+    purify(poke::Pokemon) → purified_poke
+
+Create a new `Pokemon` object that is a purified form of `poke`.
+"""
 function purify(poke::Pokemon)
     isshadow(poke) || return poke
     level = max(maximum(poke.level), 25)
@@ -145,6 +215,12 @@ end
 
 ## Lists of pokemon, sometimes matching some criteria (megas, legendaries, etc)
 
+"""
+    eachpokemon(; include_shadow=true, include_mega=true, level=31, ivs=(15, 15, 15)) → pokes
+
+Return a list of one of each species of `Pokemon` at the given level and IVs. By default, include
+shadows and megas.
+"""
 function eachpokemon(; include_shadow = true, include_mega = true, level = 31, ivs = (15, 15, 15))
     pokes = Pokemon[]
     formes = Dict{Int, Vector{String}}()
@@ -253,12 +329,19 @@ end
 
 ## Stats/CP/HP
 
+"""
+    base_stats(poke::Pokemon) → (a, d, h)
+    base_stats(species::Species; mega::Union{Bool, Char} = false) → (a, d, h)
+
+Return the base attack (`a`), defense (`d`), and stamina (`h`) stats for a `Pokemon` or `Species`.
+If `poke` is a mega-evolution or `mega != false`, the base stats for the mega-evolution are returned.
+"""
+base_stats(poke::Pokemon) = base_stats(Species(poke); mega = mega_default(poke))
 function base_stats(pd::Species; mega::Union{Bool, Char} = false)
     mega === false && return Tuple(pd.stats)
     return Tuple(getmega(pd, mega).stats)
 end
 base_stats(pd::MegaOverride) = Tuple(pd.stats)
-base_stats(poke::Pokemon) = base_stats(Species(poke); mega = mega_default(poke))
 base_stats(key::AbstractString; mega = false, kwargs...) = base_stats(only_pokemon(key; kwargs...); mega)
 
 stats(pd::Species, ivs::IVsType; mega::Union{Bool, Char} = false) = base_stats(pd; mega) .+ ivs
@@ -269,6 +352,13 @@ stats(pd::MegaOverride, ivs::IVsType, level::Real) =
     floorh(cpm_from_level(level) .* stats(pd, ivs))
 stats(sts::Union{StatsType, IVsType}, level::Real) = floorh(cpm_from_level(level) .* sts)
 
+"""
+    stats(poke::Pokemon, level = poke.level; mega = false) → (a, d, h)
+
+Return the attack, defense, and stamina stats for `poke`. Optionally you can override
+the level and whether to use the mega-evolution stats, for example to see how the stats change
+when you mega-evolve this Pokemon.
+"""
 function stats(poke::Pokemon, level::Real = scalarlevel(something(poke.level, NaN)); kwargs...)
     pd = getmega(Species(poke), poke.mega)
     poke.raid_tier !== nothing && return float.(raid_boss_stats(pd, poke.raid_tier))
@@ -286,6 +376,13 @@ function combat_power(pd::Species, ivs::IVsType, level; kwargs...)
     cpm = cpm_from_level.(level)
     return combat_power.(a, d, h, cpm)
 end
+
+"""
+    combat_power(poke::Pokemon, level = poke.level) → cp
+
+Return the combat power of `poke`. Optionally you can override the level, for example to see how the CP changes
+when you power up the Pokemon.
+"""
 function combat_power(poke::Pokemon, level = poke.level)
     pd = Species(poke)
     if poke.raid_tier !== nothing
@@ -303,15 +400,29 @@ end
 
 hp(pd::Species, ivs::IVsType, level::Real) = max(10, Int(stats(pd, ivs, level)[3]))
 hp(pd::Species, ivs::IVsType, level::AbstractVector) = [hp(pd, ivs, l) for l in level]
+
+"""
+    hp(poke::Pokemon, level = poke.level) → hp
+
+Return the hit points of `poke`. Optionally you can override the level, for example to see how the HP changes
+when you power up the Pokemon.
+"""
 function hp(poke::Pokemon, level = poke.level)
     raid_tier(poke) !== nothing && return raids.hp[poke.raid_tier]
     poke.max_tier !== nothing && return maxbattles.hp[Int(poke.max_tier)]
     return hp(Species(poke), poke.ivs, level)
 end
 
-stat_product(stats::StatsType) = prod(stats) / 1000
-stat_product(stats::IVsType) = stat_product(float.(stats))
-stat_product(args...; kwargs...) = stat_product(stats(args...; kwargs...))
+"""
+    statproduct(poke) → sp
+    statproduct(stats) → sp
+
+Compute the "stat product" for a specific Pokemon.
+"""
+statproduct(poke::Pokemon) = statproduct(stats(poke))
+statproduct(stats::StatsType) = prod(stats) / 1000
+statproduct(stats::IVsType) = statproduct(float.(stats))
+statproduct(args...; kwargs...) = statproduct(stats(args...; kwargs...))
 
 bulk(a, d, h) = sqrt(d * h)
 bulk(stats::StatsType) = bulk(stats...)
@@ -432,6 +543,12 @@ helperbonus(helpericons::Integer) = iszero(helpericons) ? 1.0f0 : 1.0f0 + maxbat
 
 ## Evolutions
 
+"""
+    baby(poke::Pokemon) → baby_species
+    baby(species::Species) → baby_species
+
+Return the baby species (base stage evolution) for `poke` or `species`.
+"""
 function baby(pd::Species; tmp = Set{String}())
     while pd.parentPokemonId !== nothing && pd.pokemonId != pd.parentPokemonId
         found = false
@@ -479,6 +596,29 @@ function adult_ids(list)
     return ids
 end
 
+"""
+    lineage_ids(poke::Pokemon) → ids
+    lineage_ids(species::Species) → ids
+    lineage_ids(list) → ids
+
+Return the further evolutions of `poke` or `species` as a list of IDs.
+
+# Examples
+
+```jldoctest
+julia> PoGOBase.lineage_ids(only_pokemon("ivysaur"))
+2-element Vector{String}:
+ "IVYSAUR"
+ "VENUSAUR"
+
+julia> PoGOBase.lineage_ids(only_pokemon("ralts"))
+4-element Vector{String}:
+ "GALLADE"
+ "GARDEVOIR"
+ "KIRLIA"
+ "RALTS"
+```
+"""
 lineage_ids(pd::Species) = sort!(collect(_lineage_ids!(Set{String}(), pd)))
 function _lineage_ids!(ids, pd)
     push!(ids, denormal(uniquename(pd)))
@@ -526,6 +666,7 @@ function powerup_cost(level::Real; kind = :normal, lucky::Bool = false)
     end
     return (stardust = sd, candy = c, candyxl = cxl)
 end
+
 function powerup_cost(poke::Pokemon, level = minimum(poke.level))
     return powerup_cost(
         level; kind = isshadow(poke) ? :shadow :
@@ -533,6 +674,11 @@ function powerup_cost(poke::Pokemon, level = minimum(poke.level))
     )
 end
 
+"""
+    evolution_cost(poke::Pokemon, as::Species = Species(poke)) → cost
+
+Return the candy `cost` to evolve `poke` to `as`.
+"""
 function evolution_cost(poke::Pokemon, as::Species = Species(poke))
     c = 0
     pd = Species(poke)
@@ -666,6 +812,20 @@ function kmcost(poke::Pokemon, target_level_or_cplimit::Real, candy = 0, candyxl
 end
 
 ## Moves
+
+"""
+    PvEMove(name::AbstractString) → move
+
+Return the PvE move with the given name. For a fast move, append "_fast" to the name.
+"""
+PoGOGamemaster.PvEMove(name::AbstractString) = pve_moves[uppercase(name)]
+
+"""
+    PvPMove(name::AbstractString) → move
+
+Return the PvP move with the given name. For a fast move, append "_fast" to the name.
+"""
+PoGOGamemaster.PvPMove(name::AbstractString) = pvp_moves[uppercase(name)]
 
 fastmoves(pd::Species) = pd.eliteQuickMove === nothing ? pd.quickMoves : [pd.quickMoves; pd.eliteQuickMove]
 chargedmoves(pd::Species) = pd.eliteCinematicMove === nothing ? pd.cinematicMoves : [pd.cinematicMoves; pd.eliteCinematicMove]

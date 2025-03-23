@@ -44,6 +44,11 @@ end
 const leagues = load_object(joinpath_and_register(datadir, "rankings.ser"))
 const meta = load_object(joinpath_and_register(datadir, "meta.ser"))
 
+"""
+    PoGOBase.dex_unavailable
+
+A set of Pokémon IDs that are not available in the game.
+"""
 const dex_unavilable = Set(
     [
         489; 490; 493; 672; 673; 679; 680; 681; 721; 746; 749; 750;

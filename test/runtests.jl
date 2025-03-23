@@ -128,8 +128,8 @@ end
     @test 121.8 <= round(stats[2]; digits = 1) <= 121.9
     @test stats[3] == 122
     @test PoGOBase.stats(poke, 30)[3] == 149
-    @test PoGOBase.stat_product(poke) == prod(stats) / 1000
-    @test PoGOBase.stat_product(Species(poke), poke.ivs) ≈ 8907.66  # with CPM=1
+    @test PoGOBase.statproduct(poke) == prod(stats) / 1000
+    @test PoGOBase.statproduct(Species(poke), poke.ivs) ≈ 8907.66  # with CPM=1
     @test PoGOBase.raid_boss_stats("Venusaur", 3) == (155.49, 148.92, 3600)
     @test sprint(show, poke) == "Venusaur; CP: 1554; level: 20.0; IVs: (15, 15, 15)"
     @test PoGOBase.baby(poke) == only_pokemon("Bulbasaur"; complete = true)
