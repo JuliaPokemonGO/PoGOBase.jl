@@ -11,7 +11,7 @@ export Pokemon, Species, PvEMove, PvPMove, MaxAttack, BossFT
 export matching_pokemon, only_pokemon, uniquename, eachpokemon
 export base_stats, stats, combat_power, hp, statproduct
 export megaevolve, purify, baby, lineage_ids
-export damage
+export damage, fastmoves, chargedmoves, typeeffect
 export league_max_level, league_catch_cp, statproduct_league, statproducts_league, best_for_league, statranks_league
 export candy, stardust, evolution_cost, kmcost
 

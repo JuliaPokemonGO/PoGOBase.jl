@@ -57,6 +57,7 @@ function typeeffect(attacktype::AbstractString, defensetype)
 end
 
 typeeffect(attacktype::AbstractString, defender::Union{Pokemon, Species}) = typeeffect(attacktype, type(defender))
+typeeffect(move::AbstractMove, defender::Union{Pokemon, Species}) = typeeffect(type(move), defender)
 
 function type_stab_effect(attacktype::AbstractString, type_attacker::TypeStrings, type_defender::TypeStrings)
     _typeeffect = typeeffect(attacktype, type_defender)
