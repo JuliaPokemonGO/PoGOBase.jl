@@ -136,6 +136,12 @@ denormal(str::AbstractString) = endswith(str, "_NORMAL") ? str[1:(end - length("
 
 ## Pokemon identity
 
+"""
+    PoGOBase.isavailable(species::Species) → Bool
+
+Return `true` if the species is currently available in the game.
+To update this list, see the `dex_unavailable` constant in `src/consts.jl`.
+"""
 function isavailable(pd::Species)
     # https://pokemondb.net/go/unavailable
     dx = dex(pd)
@@ -827,8 +833,21 @@ Return the PvP move with the given name. For a fast move, append "_fast" to the 
 """
 PoGOGamemaster.PvPMove(name::AbstractString) = pvp_moves[uppercase(name)]
 
-fastmoves(pd::Species) = pd.eliteQuickMove === nothing ? pd.quickMoves : [pd.quickMoves; pd.eliteQuickMove]
-chargedmoves(pd::Species) = pd.eliteCinematicMove === nothing ? pd.cinematicMoves : [pd.cinematicMoves; pd.eliteCinematicMove]
+"""
+    fastmoves(species::Species; elite = true) → moves
+
+Return a list of the names of the fast moves that `species` can learn.
+By default, include any elite fast moves.
+"""
+fastmoves(pd::Species; elite::Bool = true) = !elite || pd.eliteQuickMove === nothing ? pd.quickMoves : [pd.quickMoves; pd.eliteQuickMove]
+
+"""
+    chargedmoves(species::Species; elite = true) → moves
+
+Return a list of the names of the charged moves that `species` can learn.
+By default, include any elite charged moves.
+"""
+chargedmoves(pd::Species; elite::Bool = true) = !elite || pd.eliteCinematicMove === nothing ? pd.cinematicMoves : [pd.cinematicMoves; pd.eliteCinematicMove]
 
 function validate_moves(fastmove, chargedmoves...; name = nothing, min_score = 2)
     function _validate(movename)

@@ -161,5 +161,34 @@ julia> stardust(hooh, 50)
 
 The stardust was discounted because it is a lucky.
 
+## Strategy
 
+Let's find all released Pokemon that resist each of Aerodactyl's fast moves:
 
+```jldoctest
+julia> aero = only_pokemon("aerodactyl"; exact=true)
+AERODACTYL (ROCK/FLYING): (221, 159, 190); Fast: ["STEEL_WING_FAST", "BITE_FAST", "ROCK_THROW_FAST"]; Charged: ["ANCIENT_POWER", "IRON_HEAD", "HYPER_BEAM", "ROCK_SLIDE", "EARTH_POWER"]
+
+julia> fms = PvPMove.(fastmoves(aero))
+3-element Vector{PvPMove}:
+ STEEL_WING_FAST (STEEL): 7.0 power, 1.0 s, 6 energy, nothing
+ BITE_FAST (DARK): 4.0 power, 0.5 s, 2 energy, nothing
+ ROCK_THROW_FAST (ROCK): 8.0 power, 1.0 s, 5 energy, nothing
+
+julia> filter(eachpokemon(include_shadow=false, include_mega=false)) do pk
+           PoGOBase.isavailable(pk) && all(fm -> typeeffect(fm, pk) < 1, fms)
+       end
+12-element Vector{Pokemon}:
+ Poliwrath; CP: 2253; level: 31.0; IVs: (15, 15, 15)
+ Lucario; CP: 2355; level: 31.0; IVs: (15, 15, 15)
+ Pawniard; CP: 1249; level: 31.0; IVs: (15, 15, 15)
+ Bisharp; CP: 2478; level: 31.0; IVs: (15, 15, 15)
+ Cobalion; CP: 2634; level: 31.0; IVs: (15, 15, 15)
+ Keldeo; CP: 3223; level: 31.0; IVs: (15, 15, 15)
+ Zamazenta; CP: 3337; level: 31.0; IVs: (15, 15, 15)
+ Zamazenta_Crowned_Shield; CP: 3320; level: 31.0; IVs: (15, 15, 15)
+ Urshifu_Rapid_Strike; CP: 3143; level: 31.0; IVs: (15, 15, 15)
+ Quaquaval; CP: 2630; level: 31.0; IVs: (15, 15, 15)
+ Pawmo; CP: 1132; level: 31.0; IVs: (15, 15, 15)
+ Pawmot; CP: 2296; level: 31.0; IVs: (15, 15, 15)
+```
