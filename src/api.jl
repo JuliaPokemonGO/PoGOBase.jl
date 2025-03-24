@@ -111,6 +111,7 @@ ERROR: multiple matching pokemon were found: ["SCATTERBUG", "SCATTERBUG_ARCHIPEL
 
 julia> only_pokemon("scatterbug"; equiv=true)
 SCATTERBUG (BUG): (63, 63, 116); Fast: ["BUG_BITE_FAST", "TACKLE_FAST"]; Charged: ["STRUGGLE"]
+```
 """
 function only_pokemon(name::AbstractString; exact::Bool = false, equiv::Bool = false, kwargs...)
     matches = matching_pokemon(name; kwargs...)
