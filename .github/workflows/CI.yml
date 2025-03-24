@@ -36,6 +36,8 @@ jobs:
           version: ${{ matrix.version }}
           arch: ${{ matrix.arch }}
       - uses: julia-actions/cache@v2
+      - name: PoGOGamemaster
+        run: julia -e 'import Pkg; Pkg.activate("."); Pkg.develop(path="PoGOGamemaster")'
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
@@ -57,6 +59,8 @@ jobs:
         with:
           version: '1'
       - uses: julia-actions/cache@v2
+      - name: PoGOGamemaster
+        run: julia -e 'import Pkg; Pkg.activate("."); Pkg.develop(path="PoGOGamemaster")'
       - name: Configure doc environment
         shell: julia --project=docs --color=yes {0}
         run: |
