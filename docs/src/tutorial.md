@@ -165,7 +165,7 @@ The stardust was discounted because it is a lucky.
 
 Let's find all released Pokemon that resist each of Aerodactyl's fast moves:
 
-```jldoctest
+```
 julia> aero = only_pokemon("aerodactyl"; exact=true)
 AERODACTYL (ROCK/FLYING): (221, 159, 190); Fast: ["STEEL_WING_FAST", "BITE_FAST", "ROCK_THROW_FAST"]; Charged: ["ANCIENT_POWER", "IRON_HEAD", "HYPER_BEAM", "ROCK_SLIDE", "EARTH_POWER"]
 
@@ -178,8 +178,9 @@ julia> fms = PvPMove.(fastmoves(aero))
 julia> filter(eachpokemon(include_shadow=false, include_mega=false)) do pk
            PoGOBase.isavailable(pk) && all(fm -> typeeffect(fm, pk) < 1, fms)
        end
-12-element Vector{Pokemon}:
+13-element Vector{Pokemon}:
  Poliwrath; CP: 2253; level: 31.0; IVs: (15, 15, 15)
+ Tauros_Paldea_Aqua; CP: 2472; level: 31.0; IVs: (15, 15, 15)
  Lucario; CP: 2355; level: 31.0; IVs: (15, 15, 15)
  Pawniard; CP: 1249; level: 31.0; IVs: (15, 15, 15)
  Bisharp; CP: 2478; level: 31.0; IVs: (15, 15, 15)
